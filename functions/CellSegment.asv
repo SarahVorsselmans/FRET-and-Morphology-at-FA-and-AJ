@@ -1,0 +1,40 @@
+function [output] = CellSegment(Int)
+%SINGLECELL Summary of this function goes here
+%   Detailed explanation goes here
+
+
+
+% img_med = medfilt2(img);
+
+%% statistical smoothing
+g = 0.5;
+s = 12;
+
+%%
+% img = imgaussfilt(img,g);%
+img = rescale(Int);
+img = medfilt2(img);
+
+threshold = graythresh(img); %graythresh function finds the best mathematical threshold (Otsu)
+
+% SE = strel('disk',s);%12
+
+bw1 = imbinarize(img, threshold*0.1); %Otsu is not enough, so we lower the threshold even more
+
+CC = bwconncomp(bw1); %make a list of all the objects in your mask
+stats = regionprops(CC,'area');%gives you the area of each objective
+
+[areas] = deal([stats.Area]); %we dont know what does 'deal' do
+[area,indx] = max(areas); %just tells you which object has the maximum area, and you get the index information of this object
+
+bw2 = false(size(bw1));%you create an empty mask (everything is false or Zero)
+bw2(CC.PixelIdxList{indx}) = true;%then you make only the object with maximum area 1 ('true')
+
+SE = strel('disk',0);%creates a shape, but now its set to Zero 
+bw2 = imdilate(bw2,SE);%applies the shape everywhere where the index is 1
+%(so your largest objective basically)
+bw2 = imfill(bw2,'holes');%any closed shape with hole will be filled
+
+output = imerode(bw2,SE);%
+end
+
